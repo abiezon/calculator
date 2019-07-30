@@ -139,14 +139,23 @@ class CalcController {
   }
 
   getResult() {
-    try {
-      return eval(this._operation.join(""));
-    } catch (e) {
-      setTimeout(() => {
-        this.setError();
-      }, 1);
+    let arr = this._operation;
+    switch (arr[1]) {
+      case '+':        
+          return parseFloat(arr[0])+parseFloat(arr[2]);
+        break;
+      case '-':
+          return arr[0]-arr[2];
+        break;
+      case '*':
+          return arr[0]*arr[2];
+        break;
+      case '/':
+          return arr[0]/arr[2];
+        break;
+      default:
+        break;
     }
-    
   }
 
   calc() {
@@ -162,7 +171,7 @@ class CalcController {
     }
 
     if (this._operation.length > 3) {
-      last = this._operation.pop();     
+      last = this._operation.pop();   
       this._lastNumber = this.getResult();
     } else if (this._operation.length == 3) {
       this._lastNumber = this.getLastItem(false);
@@ -390,7 +399,6 @@ class CalcController {
   }
 
   squareRoot() {
-
     let sqr = Math.sqrt(this._operation.join());
     this._historyDisplay = [];
     this.displayCalc = sqr;
@@ -406,18 +414,7 @@ class CalcController {
   }
 
   set displayCalc(value) {
-
     let str = value;
-    
-
-    // console.log(value.toString());
-    // if (!value.toString().indexOf('.') == -1) {
-    //   console.log('aaa');
-    //   this._displayCalcEl.value = value.toString().replace('.', ',');
-    // } else {
-    //   this._displayCalcEl.value = value.toLocaleString();
-    // }
-
     if (str.toString().length > 10) {
       str = str.toLocaleString();
       if (str.length > 10) {
@@ -429,11 +426,9 @@ class CalcController {
         value = value.toString().replace('.',',');
         this._displayCalcEl.value = value.toLocaleString();
       } else {
-        value = parseInt(value);
+        value = parseFloat(value);
         this._displayCalcEl.value = value.toLocaleString();
-      }
-
-      
+      }      
     }
   }
 
