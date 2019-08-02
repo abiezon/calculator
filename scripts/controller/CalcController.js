@@ -108,13 +108,14 @@ class CalcController {
   removeOneNumber() {
     let numbers = this._lastNumberInsert.toString().split("");
     let newValue = '';
+
     numbers.pop();
     numbers.join("");
 
     numbers.forEach(number => {
       newValue = newValue+number;
     });
-
+    
     this.setLastOperation(newValue);
     this.setLastNumberToDisplay();
   }
@@ -128,7 +129,7 @@ class CalcController {
   }
 
   isOperator(value) {
-    return (['+', '-', '*', '%', '/'].indexOf(value) > -1);
+    return (['+', '-', '*', '%', '/', '√'].indexOf(value) > -1);
   }
 
   pushOperation(value) {
@@ -145,13 +146,16 @@ class CalcController {
           return parseFloat(arr[0])+parseFloat(arr[2]);
         break;
       case '-':
-          return arr[0]-arr[2];
+          return parseFloat(arr[0])-parseFloat(arr[2]);
         break;
       case '*':
-          return arr[0]*arr[2];
+          return parseFloat(arr[0])*parseFloat(arr[2]);
         break;
       case '/':
-          return arr[0]/arr[2];
+          return parseFloat(arr[0])/parseFloat(arr[2]);
+        break;
+      case '%':
+          return parseFloat(arr[0])*parseFloat(arr[2]);
         break;
       default:
         break;
@@ -165,7 +169,11 @@ class CalcController {
     if (this._operation.length < 3) {
       let firstItem = this._operation[0];
       this._operation = [firstItem, this._lastOperator, this._lastNumber];
-      this._historyDisplay.push(this._lastOperator.toString());
+
+      if (this._historyDisplay[this._historyDisplay.length-1] != this._lastOperator) {
+        this._historyDisplay.push(this._lastOperator);
+      }
+      
       this._historyDisplay.push(this._lastNumber.toString());
       this.setHistoryDisplay();
     }
@@ -191,8 +199,7 @@ class CalcController {
   }
 
   setHistoryDisplay() {
-
-    this.displayHistoryCalc = this._historyDisplay.join('').toString().replace(".", ",");
+    this.displayHistoryCalc = this._historyDisplay.join('').toString();
   }
 
   getLastItem(isOperator = true) {
@@ -239,7 +246,9 @@ class CalcController {
         let newValue = this.getLastOperation().toString() + value.toString();
         this.setLastOperation(newValue);
         this._historyDisplay.pop();
-        this._historyDisplay.push(newValue.toString().replace(".", ","));
+        let numberFormat = new Intl.NumberFormat('pt', { maximumSignificantDigits: 10 });
+        let numberHistory = numberFormat.format(newValue);
+        this._historyDisplay.push(numberHistory);
         this.setLastNumberToDisplay();
       }
       
@@ -249,6 +258,68 @@ class CalcController {
 
   setError() {
     this.displayCalc = "Error";
+  }
+
+  squareRoot() {
+    this._historyDisplay = [];
+    let sqr = '';
+    let firstItem = '';
+    if (this._operation.length > 1) {
+      sqr = Math.sqrt(this._operation[2]);
+      firstItem = this._operation[2];
+      this._operation[2] = sqr;
+      this._historyDisplay.push(this._operation[0]+this._operation[1]+'√('+firstItem+')');      
+    } else {
+      sqr = Math.sqrt(this._operation.join());
+      firstItem = this._operation[0];
+      this._operation[0] = sqr;
+      this._historyDisplay.push('√('+firstItem+')');
+    }
+    
+    this.displayCalc = sqr;
+      
+    this.setHistoryDisplay();
+  }
+
+  squared() {
+    this._historyDisplay = [];
+    let sqr = '';
+    let firstItem = '';
+    if (this._operation.length > 1) {
+      sqr = Math.pow(this._operation[2], 2);
+      firstItem = this._operation[2];
+      this._operation[2] = sqr;
+      this._historyDisplay.push(this._operation[0]+this._operation[1]+'sqr('+firstItem+')');
+    } else {
+      sqr = Math.pow(this._operation[0], 2);
+      firstItem = this._operation[0];
+      this._operation[0] = sqr;
+      this._historyDisplay.push('sqr('+firstItem+')');
+    }   
+
+    this.displayCalc = sqr;   
+    this.setHistoryDisplay();
+  }
+
+  fraction() {
+    let fraction = '';
+    let firstItem = '';
+    this._historyDisplay = [];
+    if (this._operation.length > 1) {
+      firstItem = this._operation[2];
+      fraction = 1/this._operation[2];
+      this._operation[2] = fraction;      
+      this._historyDisplay.push(this._operation[0]+this._operation[1]+'1/('+firstItem+')');
+      this.displayCalc = fraction;
+    } else {
+      fraction = 1/this._operation.join();
+      firstItem = this._operation[0];
+      this._historyDisplay.push('1/('+firstItem+')');
+      this._operation[0] = fraction;
+      this.displayCalc = fraction;
+    }
+   
+    this.setHistoryDisplay();
   }
 
   addDot() {
@@ -347,6 +418,12 @@ class CalcController {
       case '√':
           this.squareRoot('√');
         break;
+      case 'x²':
+          this.squared('x²');
+        break;
+      case '¹/x':
+          this.fraction('¹/x');
+        break;
       case '=':
           this.calc();
         break;
@@ -398,15 +475,6 @@ class CalcController {
     this.displayTime = this.currentDate.toLocaleTimeString(this._locale);
   }
 
-  squareRoot() {
-    let sqr = Math.sqrt(this._operation.join());
-    this._historyDisplay = [];
-    this.displayCalc = sqr;
-    this._operation[0] = sqr;
-    this._historyDisplay.push(sqr);
-    this.setHistoryDisplay();
-  }
-
   /** getters and setters */
 
   get displayCalc() {
@@ -414,22 +482,13 @@ class CalcController {
   }
 
   set displayCalc(value) {
-    let str = value;
-    if (str.toString().length > 10) {
-      str = str.toLocaleString();
-      if (str.length > 10) {
-        document.getElementById("display").style.fontSize = eval(document.getElementById("display").offsetWidth/str.length+5)+'px';
-      }
-      this._displayCalcEl.value = str;
-    } else {
-      if(value.toString().length <=3 ) {
-        value = value.toString().replace('.',',');
-        this._displayCalcEl.value = value.toLocaleString();
-      } else {
-        value = parseFloat(value);
-        this._displayCalcEl.value = value.toLocaleString();
-      }      
+    let numberFormat = new Intl.NumberFormat('pt', { maximumSignificantDigits: 10 });
+
+    if (value.toString().length > 10) {
+      document.getElementById("display").style.fontSize = eval(document.getElementById("display").offsetWidth/value.length+5)+'px';
     }
+
+    this._displayCalcEl.value = numberFormat.format(value);
   }
 
   get displayHistoryCalc() {
@@ -440,9 +499,10 @@ class CalcController {
 
     if (value.toString().length > 10) {
       document.getElementById("display-history").style.fontSize = "20px";
-    }
+    }   
 
-    this._displayHistoryCalcEl.value = value.toLocaleString();
+    this._displayHistoryCalcEl.value = value;    
+    
   }
 
   get displayTime() {
