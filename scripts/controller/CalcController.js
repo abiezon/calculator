@@ -383,10 +383,10 @@ class CalcController {
     let value = '';
     let firstItem = '';
     if (this._operation.length > 1) {
-      value = this._operation[2]/100;
+      value = this._operation[0]*this._operation[2]/100;
       firstItem = this._operation[2];
       this._operation[2] = value;
-      this._historyDisplay.push(numberFormat.format(value));
+      this._historyDisplay.push(numberFormat.format(firstItem));
     } else {
       if (this._operation[0] == undefined) {
         this._operation.push(0);
@@ -394,7 +394,7 @@ class CalcController {
       value = this._operation[0]/100;
       firstItem = this._operation[0];
       this._operation[0] = value;
-      this._historyDisplay.push(numberFormat.format(value));
+      this._historyDisplay.push(numberFormat.format(firstItem));
     }
 
     this.displayCalc = value;
